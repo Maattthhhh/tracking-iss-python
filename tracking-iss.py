@@ -6,6 +6,7 @@ from urllib.request import urlopen as uReq
 from bs4 import BeautifulSoup as soup
 from geopy.geocoders import Nominatim
 
+#sends request to get the latitude and longitude of the International Space Station
 req = requests.get('https://api.wheretheiss.at/v1/satellites/25544', timeout=3);
 data = req.json();
 latitude = float(data['latitude']);
@@ -14,6 +15,7 @@ longitude = float(data['longitude']);
 print("ISS Latitude: ", latitude);
 print("ISS Longitude: ", longitude);
 
+#uses an API to locate which city, country and/or continent the coordinates point towards
 req = requests.get("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude="+str(latitude)+"&longitude="+str(longitude)+"&localityLanguage=en");
 if req.status_code == 200:
     iss = req.json();
@@ -25,7 +27,8 @@ if req.status_code == 200:
             else:
                 my_url = "https://en.wikipedia.org/wiki/"+iss['continent'];
                 response = requests.get(my_url)
-    
+
+                #uses webscraping to get general info on the current location through Wikipedia
                 if response.status_code == 200:
                     page_soup = soup(response.text, "html.parser")
                     paragraphs = page_soup.findAll('p')
