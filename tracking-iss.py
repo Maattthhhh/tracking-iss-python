@@ -19,11 +19,34 @@ print("ISS Longitude: ", longitude);
 req = requests.get("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude="+str(latitude)+"&longitude="+str(longitude)+"&localityLanguage=en");
 if req.status_code == 200:
     iss = req.json();
+
+    def get_condition(city):
+        url = "http://wttr.in/" + city + "?format=%t"
+        page = uReq(url)
+        raw = page.read()
+        condition = raw.decode("utf-8")
+        return condition
+
     if "GMT" in iss['locality'] or iss['locality'] =='':
         if "GMT" in iss['countryName'] or iss['countryName'] =='':
             if "GMT" in iss['continent'] or iss['continent'] =='':
-                print()
-                print("ISS location temporarily unavailable.");
+                my_url = "https://en.wikipedia.org/wiki/"+iss['localityInfo']['informative'][0]['name'];
+                response = requests.get(my_url)
+                if response.status_code == 200:
+                    page_soup = soup(response.text, "html.parser")
+                    paragraphs = page_soup.findAll('p')
+                    filter_phrases = ["was the", "is the", "are the", "was a", "is a", "are a"]
+
+                    for p in paragraphs:
+                        paragraph_text = p.get_text().lower()
+                        if any(phrase in paragraph_text for phrase in filter_phrases):
+                            text_with_notations = p.get_text()
+                            cleaned_text = re.sub(r'\[\d+\]', '', text_with_notations)
+                            print()
+                            print("The International Space Station is currently near "+iss['localityInfo']['informative'][0]['name']+".");
+                            print()
+                            print(cleaned_text)
+                            break
             else:
                 my_url = "https://en.wikipedia.org/wiki/"+iss['continent'];
                 response = requests.get(my_url)
@@ -88,6 +111,14 @@ if req.status_code == 200:
                     print()
                     print(cleaned_text)
                     break
+
+            city = iss['locality']
+            condition = get_condition(city)
+            print("The current weather in "+iss['locality']+" is "+condition)
+            
         else:
             print()
             print("The International Space Station is currently near "+iss['locality']+", "+iss['countryName']+".");
+            city = iss['locality']
+            condition = get_condition(city)
+            print("The current weather in "+iss['locality']+" is "+condition)
