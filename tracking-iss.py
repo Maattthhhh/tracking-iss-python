@@ -3,6 +3,7 @@ import bs4
 import requests
 import json
 from urllib.request import urlopen as uReq
+from urllib.error import HTTPError
 from bs4 import BeautifulSoup as soup
 from geopy.geocoders import Nominatim
 
@@ -21,11 +22,15 @@ if req.status_code == 200:
     iss = req.json();
 
     def get_condition(city):
-        url = "http://wttr.in/" + city + "?format=%t"
-        page = uReq(url)
-        raw = page.read()
-        condition = raw.decode("utf-8")
-        return condition
+        try:
+            encoded_city = urllib.parse.quote(city)
+            url = "http://wttr.in/" + encoded_city + "?format=%t"
+            page = uReq(url)
+            raw = page.read()
+            condition = raw.decode("utf-8")
+            return condition
+        except HTTPError:
+            return "currently unavailable."
 
     if "GMT" in iss['locality'] or iss['locality'] =='':
         if "GMT" in iss['countryName'] or iss['countryName'] =='':
